@@ -1,0 +1,69 @@
+General:
+  # Livox sensor whose scans were exported as sensor_msgs/PointCloud2
+  # (fields: x, y, z, intensity, tag, line, time[s]) instead of the native
+  # livox_ros_driver/CustomMsg. Used e.g. by the Bunker DVI dataset
+  # (/livox/pointcloud + /livox/imu).
+  #
+  # lidar_type 1 (VELODYNE) is reused on purpose: Voxel-SLAM's velodyne handler
+  # parses x/y/z plus a per-point FLOAT32 "time" field in seconds (0..0.1) and
+  # ignores "ring", which is exactly the Livox PointCloud2 layout.
+  lid_topic: "/livox/pointcloud"
+  imu_topic: "/livox/imu"
+  # Must be an existing directory: the node runs a non-recursive
+  # `mkdir <save_path><bagname>/` at startup. /tmp is always present and
+  # world-writable, so mkdir /tmp/livox_pc2/ succeeds. The offline map is not
+  # used by the HDMapping conversion (that comes from the recorded topics).
+  save_path: "/tmp/"
+  previous_map: ""
+  bagname: "livox_pc2"
+  lidar_type: 1
+  blind: 0.5
+  point_filter_num: 3
+  # Livox internal IMU -> LiDAR extrinsic (Livox Avia factory value).
+  # Adjust if your sensor reports a different calibration.
+  extrinsic_tran: [0.04165, 0.02326, -0.0284]
+  extrinsic_rota: [1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1]
+  is_save_map: 0
+
+Odometry:
+  cov_gyr: 0.1
+  cov_acc: 1
+  rdw_gyr: 0.0001
+  rdw_acc: 0.0001
+  down_size: 0.1
+  dept_err: 0.02
+  beam_err: 0.05
+  voxel_size: 1
+  min_eigen_value: 0.0025
+  degrade_bound: 10
+  point_notime: 0
+
+LocalBA:
+  win_size: 10
+  max_layer: 2
+  cov_gyr: 0.01
+  cov_acc: 1
+  rdw_gyr: 0.0001
+  rdw_acc: 0.0001
+  min_ba_point: 1
+  plane_eigen_value_thre: [4.0, 4.0, 4.0, 4.0]
+  imu_coef: 0.0001
+  thread_num: 5
+
+Loop:
+  jud_default: 0.5
+  icp_eigval: 10
+  ratio_drift: 0.01
+  curr_halt: 10
+  prev_halt: 10
+  acsize: 2
+  mgsize: 2
+  isHighFly: 0
+
+GBA:
+  voxel_size: 2
+  min_eigen_value: 0.1
+  eigen_value_array: [4.0, 4.0, 4.0, 4.0]
+  total_max_iter: 6
