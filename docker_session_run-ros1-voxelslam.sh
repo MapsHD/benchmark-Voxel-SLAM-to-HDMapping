@@ -23,7 +23,9 @@ TF_CHILD_FRAME="${TF_CHILD_FRAME:-aft_mapped}"
 # Sensor selection: which Voxel-SLAM launch file to use.
 # avia | avia_fly | mid360 | hesai | ouster | velodyne | livox_pc2
 #   livox_pc2 = Livox scans exported as sensor_msgs/PointCloud2 (e.g. Bunker DVI)
-SENSOR="${SENSOR:-avia}"
+# This branch (Bunker-DVI-Dataset-reg-1) defaults to livox_pc2 for the Bunker
+# DVI reg-1 bag; override with e.g. `SENSOR=avia ./docker_session_run-...`.
+SENSOR="${SENSOR:-livox_pc2}"
 
 # Launch RViz inside the SLAM pane (0/1). RViz is the live view of how the
 # algorithm performs on the dataset, so it is ON by default. The required
@@ -48,7 +50,7 @@ usage() {
   echo "If no arguments are provided, a GUI file selector will be used."
   echo
   echo "Environment variables:"
-  echo "  SENSOR        - Voxel-SLAM launch profile: avia|avia_fly|mid360|hesai|ouster|velodyne (default: avia)"
+  echo "  SENSOR        - Voxel-SLAM launch profile: avia|avia_fly|mid360|hesai|ouster|velodyne|livox_pc2 (default: livox_pc2)"
   echo "  LIDAR_TOPIC   - LiDAR topic name inside the bag (default: the profile's config topic)"
   echo "  IMU_TOPIC     - IMU topic name inside the bag   (default: the profile's config topic)"
   echo "  CLOUD_TOPIC   - Voxel-SLAM per-scan cloud topic (default: /map_scan)"
