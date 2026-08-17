@@ -22,7 +22,7 @@ TF_CHILD_FRAME="${TF_CHILD_FRAME:-aft_mapped}"
 
 # Sensor selection: which Voxel-SLAM launch file to use.
 # avia | avia_fly | mid360 | hesai | ouster | velodyne
-SENSOR="${SENSOR:-avia}"
+SENSOR="${SENSOR:-velodyne}"
 
 usage() {
   echo "Usage:"
