@@ -21,11 +21,13 @@ CLOUD_TOPIC="${CLOUD_TOPIC:-/map_scan}"
 TF_CHILD_FRAME="${TF_CHILD_FRAME:-aft_mapped}"
 
 # Sensor selection: which Voxel-SLAM launch file to use.
-# avia | avia_fly | mid360 | hesai | ouster | velodyne | livox_pc2
+# avia | avia_fly | mid360 | hesai | ouster | velodyne | livox_pc2 | canonical
 #   livox_pc2 = Livox scans exported as sensor_msgs/PointCloud2 (e.g. Bunker DVI)
-# This branch (Bunker-DVI-Dataset-reg-1) defaults to livox_pc2 for the Bunker
-# DVI reg-1 bag; override with e.g. `SENSOR=avia ./docker_session_run-...`.
-SENSOR="${SENSOR:-livox_pc2}"
+#   canonical = the benchmark's canonical spinning-lidar bag (velodyne.yaml with
+#               the canonical sensor description; see the orchestration README)
+# This branch (hdmapping-benchmark-canonical) defaults to canonical; override with
+# e.g. `SENSOR=avia ./docker_session_run-...`.
+SENSOR="${SENSOR:-canonical}"
 
 # Launch RViz inside the SLAM pane (0/1). RViz is the live view of how the
 # algorithm performs on the dataset, so it is ON by default. The required
@@ -50,7 +52,7 @@ usage() {
   echo "If no arguments are provided, a GUI file selector will be used."
   echo
   echo "Environment variables:"
-  echo "  SENSOR        - Voxel-SLAM launch profile: avia|avia_fly|mid360|hesai|ouster|velodyne|livox_pc2 (default: livox_pc2)"
+  echo "  SENSOR        - Voxel-SLAM launch profile: avia|avia_fly|mid360|hesai|ouster|velodyne|livox_pc2|canonical (default: canonical)"
   echo "  LIDAR_TOPIC   - LiDAR topic name inside the bag (default: the profile's config topic)"
   echo "  IMU_TOPIC     - IMU topic name inside the bag   (default: the profile's config topic)"
   echo "  CLOUD_TOPIC   - Voxel-SLAM per-scan cloud topic (default: /map_scan)"
@@ -102,8 +104,9 @@ case "$SENSOR" in
   ouster)   LAUNCH_FILE="vxlm_ouster.launch";   CFG_LIDAR="/os1_cloud_node/points"; CFG_IMU="/os1_cloud_node/imu" ;;
   velodyne) LAUNCH_FILE="vxlm_velodyne.launch"; CFG_LIDAR="/velodyne_points";      CFG_IMU="/imu/data" ;;
   livox_pc2) LAUNCH_FILE="vxlm_livox_pc2.launch"; CFG_LIDAR="/livox/pointcloud";   CFG_IMU="/livox/imu" ;;
+  canonical) LAUNCH_FILE="vxlm_canonical.launch"; CFG_LIDAR="/lidar/pointcloud";   CFG_IMU="/lidar/imu" ;;
   *)
-    echo "Error: unknown SENSOR=$SENSOR (use avia|avia_fly|mid360|hesai|ouster|velodyne|livox_pc2)"
+    echo "Error: unknown SENSOR=$SENSOR (use avia|avia_fly|mid360|hesai|ouster|velodyne|livox_pc2|canonical)"
     exit 1
     ;;
 esac
@@ -135,6 +138,7 @@ docker run -it --rm \
   --network host \
   -e DISPLAY=$DISPLAY \
   -e ROS_HOME=/tmp/.ros \
+  -e DISABLE_ROS1_EOL_WARNINGS=1 \
   -e SENSOR="$SENSOR" \
   -e USE_RVIZ="$USE_RVIZ" \
   -e LIBGL_ALWAYS_SOFTWARE="$LIBGL_ENV" \
@@ -295,6 +299,7 @@ docker run -it --rm \
   --network host \
   -e DISPLAY="$DISPLAY" \
   -e ROS_HOME=/tmp/.ros \
+  -e DISABLE_ROS1_EOL_WARNINGS=1 \
   -u 1000:1000 \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
   -v "$BAG_OUTPUT_HOST":"$BAG_OUTPUT_CONTAINER" \

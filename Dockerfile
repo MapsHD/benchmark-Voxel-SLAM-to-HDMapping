@@ -109,6 +109,21 @@ RUN sed -i 's|"/camera_init", "/aft_mapped"|"camera_init", "aft_mapped"|' \
     src/Voxel-SLAM/VoxelSLAM/src/voxelslam.cpp && \
     grep -q '"camera_init", "aft_mapped"' src/Voxel-SLAM/VoxelSLAM/src/voxelslam.cpp
 
+# Canonical bag: the pose (TF camera_init -> aft_mapped) and its /map_scan cloud
+# are stamped with ros::Time::now(), the replay clock at publish time, so
+# consecutive stamps are 90-111 ms apart instead of one scan (100 ms) and evo
+# pairs only ~85% of the poses with the ground truth (10 ms window). Stamp both
+# with the state's time, x_curr.t = pcl_end_time (the scan end, where the pose
+# is estimated); the listener pairs them by stamp. Fails the build if these lines
+# change.
+RUN f=src/Voxel-SLAM/VoxelSLAM/src/voxelslam.cpp && \
+    [ "$(grep -c 'ros::Time ct = ros::Time::now();' $f)" = 1 ] && \
+    [ "$(grep -c 'pub_pl_func(pcl_send, pub_scan);' $f)" = 1 ] && \
+    sed -i -e 's|ros::Time ct = ros::Time::now();|ros::Time ct = ros::Time().fromSec(xc.t);|' \
+           -e 's|pub_pl_func(pcl_send, pub_scan);|{ pcl_send.height = 1; pcl_send.width = pcl_send.size(); sensor_msgs::PointCloud2 output; pcl::toROSMsg(pcl_send, output); output.header.frame_id = "camera_init"; output.header.stamp = ros::Time().fromSec(x_curr.t); pub_scan.publish(output); }|' $f && \
+    [ "$(grep -c 'ros::Time().fromSec(xc.t)' $f)" = 1 ] && \
+    [ "$(grep -c 'output.header.stamp = ros::Time().fromSec(x_curr.t);' $f)" = 1 ]
+
 # Build the livox_ros_driver message (CustomMsg) first, then everything else:
 # the Voxel-SLAM node, the converter, and the VoxelSLAMPointCloud2 RViz plugin
 # (required by the back.rviz config used for the live benchmark visualization).
